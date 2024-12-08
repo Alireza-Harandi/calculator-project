@@ -41,4 +41,9 @@ public class OperatorController {
 
         return result;
     }
+
+    public void define(String str){
+        char[] input = str.toCharArray();
+        definedList.add(new DefinedOperator(input[2], input[0], input[4], str.split(" ")[4]));
+    }
 }
