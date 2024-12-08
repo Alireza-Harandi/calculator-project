@@ -10,6 +10,7 @@ module com.example.calculatorr {
     requires org.kordamp.bootstrapfx.core;
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
+    requires static lombok;
 
     opens com.example.calculatorr.view to javafx.fxml;
     exports com.example.calculatorr.view;
