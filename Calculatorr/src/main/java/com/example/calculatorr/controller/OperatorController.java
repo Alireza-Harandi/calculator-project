@@ -14,4 +14,8 @@ public class OperatorController {
         }
         return operatorController;
     }
+
+    private double factorial(double n) {
+        return n == 1 ? 1 : n * factorial(n - 1);
+    }
 }
