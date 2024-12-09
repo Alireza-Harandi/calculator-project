@@ -205,4 +205,30 @@ public class CalculatorController{
             return false;
         }
     }
+
+    private void addEquations(int n, String[] inputs) {
+        for (int i = 0; i < n; i++) {
+            inputs[i] = inputs[i].chars()
+                    .mapToObj(c -> (char) c)
+                    .map(ch -> (ch >= 'a' && ch <= 'z') ? Character.toUpperCase(ch) : ch)
+                    .map(String::valueOf)
+                    .collect(Collectors.joining());
+            if( inputs[i].charAt(1) != '=' || !Character.isLetter(inputs[i].charAt(0)) )
+                throw new InvalidFormatException();
+
+            for (int j = 0; j < inputs[i].length(); j++) {
+                char ch = inputs[i].charAt(j);
+
+                if ( "+-*/^!".indexOf(ch) != -1){
+                    if(j+1 != inputs[i].length()) {
+                        char ch2 = inputs[i].charAt(j + 1);
+                        if ("!".indexOf(ch) == -1 && "+-*/^!".indexOf(ch2) != -1)
+                            throw new InvalidFormatException();
+                    }
+                }
+            }
+
+            equations.enqueue(new Equation(inputs[i].charAt(0), inputs[i].split("=")[1]));
+        }
+    }
 }
