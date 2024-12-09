@@ -57,4 +57,66 @@ public class CalculatorController{
 
         return true;
     }
+
+    private Equation SelectEquation() {
+        int count;
+        int n = equations.count();
+
+        for (int j = 0; j < n; j++) {
+            Equation equation = equations.dequeue();
+            int m = equation.getPhrase().length();
+            for (int i = 0; i < m; i++) {
+                count = 0;
+                char ch1 = equation.getPhrase().charAt(i);
+                String name = "";
+
+                if (Character.isLetter(ch1)) {
+                    count++;
+                    char ch2 = 0;
+
+                    if (i+1 < m)
+                        ch2 = equation.getPhrase().charAt(i + 1);
+
+                    if (Character.isLetter(ch2)) {
+                        name += ch1 + ch2;
+                        count++;
+                    } else {
+                        name += ch1;
+                    }
+
+                    boolean define = false;
+
+                    for (Operand operand : OperandController.getOperandController().operands) {
+
+                        if (operand.getName().equalsIgnoreCase(name)) {
+                            define = true;
+
+                            if (count == 1)
+                                equation.setPhrase(equation.getPhrase().substring(0, i) + operand.getValue() + equation.getPhrase().substring(i + 1));
+                            else
+                                equation.setPhrase(equation.getPhrase().substring(0, i) + operand.getValue() + equation.getPhrase().substring(i + 2));
+                            break;
+                        }
+                    }
+
+                    if (!define){
+                        checkInput(name);
+                        break;
+                    }
+
+                }
+
+                if (i == m - 1)
+                    return equation;
+            }
+            equations.enqueue(equation);
+        }
+
+        return new Equation('$', "");
+    }
+
+    private void checkInput(String input) {
+        if (!Character.isUpperCase(input.charAt(0)))
+            throw new InvalidInputException();
+    }
 }
