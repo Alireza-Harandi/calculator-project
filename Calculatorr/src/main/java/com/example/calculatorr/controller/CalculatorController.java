@@ -8,7 +8,7 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class CalculatorController{
+public class CalculatorController implements CalculationService{
     private static CalculatorController calculatorController;
 
     private CalculatorController() {
@@ -25,6 +25,58 @@ public class CalculatorController{
     private Queue<Equation> equations;
     private String[] results;
     private int resultIndex;
+
+    @Override
+    public String calculate(int n, String[] inputs) {
+        equations = new Queue<>(n);
+        results = new String[n];
+        DoublyLinkedList<String> parts;
+        DoublyLinkedList<String> postfix;
+        String result;
+
+        if (n==1 && typeOfExpression(inputs[0])) {
+            try {
+                ArithmeticExpression expression = new ArithmeticExpression(inputs[0]);
+                parts = parseEquation(expression.getPhrase());
+                postfix = toPostfix(parts);
+                result = solvePostfix(postfix);
+                addResult("", result);
+
+                return String.join("\n", results);
+            } catch (InvalidFormatException | InvalidInputException | ArithmeticErrorException |
+                     CircularDependencyException | NotDefinedVariableException | InconsistencyException |
+                     InvalidPropertiesFormatException e) {
+                return e.getMessage();
+            }
+        }
+        else {
+            try {
+                addEquations(n, inputs);
+
+                for (int i = 0; i < n; i++) {
+                    Equation equation = SelectEquation();
+
+                    if (equation.getVariable() != '$') {
+                        parts = parseEquation(equation.getPhrase());
+                        postfix = toPostfix(parts);
+                        result = solvePostfix(postfix);
+                        addResult(String.valueOf(equation.getVariable()), result);
+                    }
+                }
+
+                if (!equations.isEmpty() && hasCircularDependency(equations))
+                    throw new CircularDependencyException();
+
+                if (!equations.isEmpty())
+                    throw new NotDefinedVariableException();
+
+                return String.join("\n", results);
+
+            } catch (InvalidFormatException | InvalidInputException | ArithmeticErrorException | CircularDependencyException | NotDefinedVariableException | InconsistencyException | InvalidPropertiesFormatException e) {
+                return e.getMessage();
+            }
+        }
+    }
 
     private boolean hasCircularDependency(Queue<Equation> equations) {
         Set<String> variables = new HashSet<>();
