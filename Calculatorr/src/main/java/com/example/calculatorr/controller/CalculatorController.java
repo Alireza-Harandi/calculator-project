@@ -1,7 +1,6 @@
 package com.example.calculatorr.controller;
 
 import com.example.calculatorr.exception.*;
-import com.example.calculatorr.exception.ArithmeticException;
 import com.example.calculatorr.model.*;
 
 import java.util.HashSet;
@@ -293,5 +292,50 @@ public class CalculatorController{
         }
 
         return parts;
+    }
+
+    private DoublyLinkedList<String> toPostfix(DoublyLinkedList<String> parts) throws InvalidPropertiesFormatException {
+        Stack<String> stack = new Stack<>();
+        DoublyLinkedList<String> result = new DoublyLinkedList<>();
+
+        for (String inp : parts) {
+            if (isNumeric(inp)){
+                result.add(inp);
+            }
+            else if (inp.equals("(")){
+                stack.push(inp);
+            }
+            else if (inp.equals(")")){
+                while (stack.count() > 0 && !stack.peek().equals("(")){
+                    result.add(stack.pop());
+                }
+
+                stack.pop();
+            }
+            else {
+                while (stack.count() > 0 && priority(inp) <= priority(stack.peek()))
+                {
+                    result.add(stack.pop());
+                }
+
+                stack.push(inp);
+            }
+        }
+
+        while (stack.count() > 0)
+        {
+            result.add(stack.pop());
+        }
+        return result;
+    }
+
+    private int priority(String temp) {
+        return switch (temp) {
+            case "-", "+" -> 1;
+            case "/", "*" -> 2;
+            case "!" -> 3;
+            case "^" -> 4;
+            default -> 0;
+        };
     }
 }
