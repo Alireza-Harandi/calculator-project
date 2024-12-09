@@ -11,6 +11,7 @@ module com.example.calculatorr {
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
     requires static lombok;
+    requires java.desktop;
 
     opens com.example.calculatorr.view to javafx.fxml;
     exports com.example.calculatorr.view;
