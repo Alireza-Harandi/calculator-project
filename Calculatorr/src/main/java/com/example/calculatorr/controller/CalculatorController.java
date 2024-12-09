@@ -140,4 +140,69 @@ public class CalculatorController{
         else
             results[resultIndex++] = variable+"="+phrase;
     }
+
+    private String solvePostfix(DoublyLinkedList<String> parts) throws InvalidPropertiesFormatException {
+        Stack<String> stack = new Stack<>();
+
+        for (String part : parts) {
+            if (isNumeric(part))
+                stack.push(part);
+            else {
+                double result;
+
+                if (part.equals("!")){
+                    double num = Double.parseDouble(stack.pop());
+                    UnaryOperator operator = new UnaryOperator(part.charAt(0), num);
+                    isValid(operator);
+                    result = OperatorController.getOperatorController().calculate(operator);
+                }
+                else {
+                    double num1 = Double.parseDouble(stack.pop());
+                    double num2 = Double.parseDouble(stack.pop());
+                    BinaryOperator operator = new BinaryOperator(part.charAt(0), num2, num1);
+                    isValid(operator);
+                    result = OperatorController.getOperatorController().calculate(operator);
+                }
+
+                stack.push(String.valueOf(result));
+            }
+        }
+
+        return stack.pop();
+    }
+
+    private void isValid(Operator operator) {
+        if (operator instanceof UnaryOperator unaryOperator) {
+            if (unaryOperator.getOperator() == '!'){
+                if (!isNumeric(String.valueOf(unaryOperator.getFirstOperand())) || unaryOperator.getFirstOperand()<0)
+                    throw new ArithmeticErrorException();
+                if (unaryOperator.getFirstOperand() != Math.floor(unaryOperator.getFirstOperand()))
+                    throw new ArithmeticErrorException();
+            }
+        }
+        else if (operator instanceof BinaryOperator binaryOperator) {
+            if (binaryOperator.getOperator() == '/'){
+                if (!isNumeric(String.valueOf(binaryOperator.getFirstOperand())) || !isNumeric(String.valueOf(binaryOperator.getSecondOperand())) || binaryOperator.getSecondOperand()==0)
+                    throw new ArithmeticErrorException();
+            }
+            else if (binaryOperator.getOperator() == '^') {
+                if (!isNumeric(String.valueOf(binaryOperator.getFirstOperand())) || !isNumeric(String.valueOf(binaryOperator.getSecondOperand())))
+                    throw new ArithmeticErrorException();
+
+                double base = binaryOperator.getFirstOperand();
+                double exponent = binaryOperator.getSecondOperand();
+                if (base < 0 && exponent > 0 && (1 / exponent) % 2 == 0)
+                    throw new ArithmeticErrorException();
+            }
+        }
+    }
+
+    private boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 }
