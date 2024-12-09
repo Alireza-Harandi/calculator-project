@@ -119,4 +119,8 @@ public class CalculatorController{
         if (!Character.isUpperCase(input.charAt(0)))
             throw new InvalidInputException();
     }
+
+    private boolean typeOfExpression(String expression) {
+        return expression.charAt(1) != '=';
+    }
 }
