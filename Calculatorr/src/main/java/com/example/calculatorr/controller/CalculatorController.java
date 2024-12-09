@@ -115,8 +115,8 @@ public class CalculatorController implements CalculationService{
 
         for (int j = 0; j < n; j++) {
             Equation equation = equations.dequeue();
-            int m = equation.getPhrase().length();
-            for (int i = 0; i < m; i++) {
+//            int m = equation.getPhrase().length();
+            for (int i = 0; i < equation.getPhrase().length(); i++) {
                 count = 0;
                 char ch1 = equation.getPhrase().charAt(i);
                 String name = "";
@@ -125,7 +125,7 @@ public class CalculatorController implements CalculationService{
                     count++;
                     char ch2 = 0;
 
-                    if (i+1 < m)
+                    if (i+1 < equation.getPhrase().length())
                         ch2 = equation.getPhrase().charAt(i + 1);
 
                     if (Character.isLetter(ch2)) {
@@ -146,6 +146,7 @@ public class CalculatorController implements CalculationService{
                                 equation.setPhrase(equation.getPhrase().substring(0, i) + operand.getValue() + equation.getPhrase().substring(i + 1));
                             else
                                 equation.setPhrase(equation.getPhrase().substring(0, i) + operand.getValue() + equation.getPhrase().substring(i + 2));
+                            i += String.valueOf(operand.getValue()).length() - count;
                             break;
                         }
                     }
@@ -157,7 +158,7 @@ public class CalculatorController implements CalculationService{
 
                 }
 
-                if (i == m - 1)
+                if (i == equation.getPhrase().length() - 1)
                     return equation;
             }
             equations.enqueue(equation);
@@ -177,7 +178,7 @@ public class CalculatorController implements CalculationService{
 
     private void addResult(String variable, String inp) {
         for (String result : results) {
-            if (result.indexOf(0) == variable.charAt(0))
+            if ( result!=null && result.indexOf(0) == variable.charAt(0))
                 throw new InconsistencyException();
         }
         String phrase = "";
