@@ -123,4 +123,21 @@ public class CalculatorController{
     private boolean typeOfExpression(String expression) {
         return expression.charAt(1) != '=';
     }
+
+    private void addResult(String variable, String inp) {
+        for (String result : results) {
+            if (result.indexOf(0) == variable.charAt(0))
+                throw new InconsistencyException();
+        }
+        String phrase = "";
+        if (Math.floor(Double.parseDouble(inp)) == Double.parseDouble(inp))
+            phrase += String.valueOf((int) Double.parseDouble(inp));
+        else
+            phrase += String.valueOf(Math.round(Double.parseDouble(inp) * 10000.0) / 10000.0);
+        OperandController.getOperandController().addOperand(new Operand(String.valueOf(variable), Double.parseDouble(inp)));
+        if (variable.isEmpty())
+            results[resultIndex++] = phrase;
+        else
+            results[resultIndex++] = variable+"="+phrase;
+    }
 }
