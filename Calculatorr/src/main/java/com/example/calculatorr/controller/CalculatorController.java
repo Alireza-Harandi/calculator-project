@@ -231,4 +231,67 @@ public class CalculatorController{
             equations.enqueue(new Equation(inputs[i].charAt(0), inputs[i].split("=")[1]));
         }
     }
+
+    private DoublyLinkedList<String> parseEquation(String equation) {
+        DoublyLinkedList<String> parts = new DoublyLinkedList<>();
+        StringBuilder numberBuffer = new StringBuilder();
+        int open =0;
+        int close = 0;
+        for (int i = 0; i < equation.length(); i++) {
+            char ch = equation.charAt(i);
+
+            if(ch == '(' && equation.charAt(i+1) == ')')
+                throw new InvalidFormatException();
+
+            if (ch == '(')
+                open++;
+            else if (ch == ')')
+                close++;
+
+            if (Character.isDigit(ch) || ch == '.') {
+                numberBuffer.append(ch);
+            }
+            else if (ch == '(' && i + 1 < equation.length() && equation.charAt(i + 1) == '-') {
+                i++;
+                numberBuffer.append('-');
+
+                while (i + 1 < equation.length() && (Character.isDigit(equation.charAt(i + 1)) || equation.charAt(i + 1) == '.')) {
+                    i++;
+
+                    if(equation.charAt(i) == '(')
+                        open++;
+                    else if (equation.charAt(i) == ')')
+                        close++;
+
+                    numberBuffer.append(equation.charAt(i));
+                }
+
+                if (!numberBuffer.isEmpty()) {
+                    parts.add(numberBuffer.toString());
+                    numberBuffer.setLength(0);
+                }
+
+                if (i + 1 < equation.length() && equation.charAt(i + 1) == ')') {
+                    i++;
+                    close++;
+                }
+            }
+            else if ("+-*/^!()".indexOf(ch) != -1) {
+                if (!numberBuffer.isEmpty()) {
+                    parts.add(numberBuffer.toString());
+                    numberBuffer.setLength(0);
+                }
+                parts.add(String.valueOf(ch));
+            }
+        }
+
+        if (open != close)
+            throw new InvalidFormatException();
+
+        if (!numberBuffer.isEmpty()) {
+            parts.add(numberBuffer.toString());
+        }
+
+        return parts;
+    }
 }
