@@ -13,6 +13,7 @@ public class CalculatorController{
     private static CalculatorController calculatorController;
 
     private CalculatorController() {
+        resultIndex = 0;
     }
 
     public static CalculatorController getCalculatorController() {
@@ -22,4 +23,38 @@ public class CalculatorController{
         return calculatorController;
     }
 
+    private Queue<Equation> equations;
+    private String[] results;
+    private int resultIndex;
+
+    private boolean hasCircularDependency(Queue<Equation> equations) {
+        Set<String> variables = new HashSet<>();
+        Set<String> notDefine = new HashSet<>();
+        int n = equations.count();
+
+        for (int i = 0; i < n; i++) {
+            Equation equation = equations.dequeue();
+            variables.add(String.valueOf(equation.getVariable()));
+
+            for (char ch : equation.getPhrase().toCharArray()) {
+                if (Character.isLetter(ch)) {
+                    notDefine.add(String.valueOf(ch));
+                }
+            }
+        }
+
+        for (String item : variables) {
+            if (!notDefine.contains(item)) {
+                return false;
+            }
+        }
+
+        for (String item : notDefine) {
+            if (!variables.contains(item)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
