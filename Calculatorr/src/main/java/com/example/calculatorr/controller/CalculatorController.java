@@ -3,6 +3,8 @@ package com.example.calculatorr.controller;
 import com.example.calculatorr.exception.*;
 import com.example.calculatorr.model.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashSet;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Set;
@@ -26,6 +28,12 @@ public class CalculatorController implements CalculationService{
     private String[] results;
     private int resultIndex;
 
+    public void reset(){
+        equations = null;
+        resultIndex = 0;
+        results = null;
+    }
+
     @Override
     public String calculate(int n, String[] inputs) {
         equations = new Queue<>(n);
@@ -34,7 +42,7 @@ public class CalculatorController implements CalculationService{
         DoublyLinkedList<String> postfix;
         String result;
 
-        if (n==1 && typeOfExpression(inputs[0])) {
+        if (n==1 && isArithmetic(inputs[0])) {
             try {
                 ArithmeticExpression expression = new ArithmeticExpression(inputs[0]);
                 parts = parseEquation(expression.getPhrase());
@@ -64,10 +72,10 @@ public class CalculatorController implements CalculationService{
                     }
                 }
 
-                if (!equations.isEmpty() && hasCircularDependency(equations))
+                if (equations.count()>0 && hasCircularDependency(equations))
                     throw new CircularDependencyException();
 
-                if (!equations.isEmpty())
+                if (equations.count()>0)
                     throw new NotDefinedVariableException();
 
                 return String.join("\n", results);
@@ -92,6 +100,7 @@ public class CalculatorController implements CalculationService{
                     notDefine.add(String.valueOf(ch));
                 }
             }
+            equations.enqueue(equation);
         }
 
         for (String item : variables) {
@@ -115,24 +124,23 @@ public class CalculatorController implements CalculationService{
 
         for (int j = 0; j < n; j++) {
             Equation equation = equations.dequeue();
-//            int m = equation.getPhrase().length();
             for (int i = 0; i < equation.getPhrase().length(); i++) {
                 count = 0;
                 char ch1 = equation.getPhrase().charAt(i);
-                String name = "";
+                String name;
 
-                if (Character.isLetter(ch1)) {
+                if ("()+-*/^!.".indexOf(ch1) == -1 && !Character.isDigit(ch1)) {
                     count++;
                     char ch2 = 0;
 
                     if (i+1 < equation.getPhrase().length())
                         ch2 = equation.getPhrase().charAt(i + 1);
 
-                    if (Character.isLetter(ch2)) {
-                        name += ch1 + ch2;
+                    if ("()+-*/^!.".indexOf(ch2) == -1 && !Character.isDigit(ch2)) {
+                        name = String.valueOf(ch1) + String.valueOf(ch2);
                         count++;
                     } else {
-                        name += ch1;
+                        name = String.valueOf(ch1);
                     }
 
                     boolean define = false;
@@ -172,20 +180,20 @@ public class CalculatorController implements CalculationService{
             throw new InvalidInputException();
     }
 
-    private boolean typeOfExpression(String expression) {
-        return expression.charAt(1) != '=';
+    private boolean isArithmetic(String expression) {
+        return !expression.contains("=");
     }
 
     private void addResult(String variable, String inp) {
         for (String result : results) {
-            if ( result!=null && result.indexOf(0) == variable.charAt(0))
+            if ( result!=null && result.charAt(0) == variable.charAt(0))
                 throw new InconsistencyException();
         }
         String phrase = "";
         if (Math.floor(Double.parseDouble(inp)) == Double.parseDouble(inp))
             phrase += String.valueOf((int) Double.parseDouble(inp));
         else
-            phrase += String.valueOf(Math.round(Double.parseDouble(inp) * 10000.0) / 10000.0);
+            phrase += new BigDecimal(inp).setScale(4, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
         OperandController.getOperandController().addOperand(new Operand(String.valueOf(variable), Double.parseDouble(inp)));
         if (variable.isEmpty())
             results[resultIndex++] = phrase;
@@ -194,33 +202,34 @@ public class CalculatorController implements CalculationService{
     }
 
     private String solvePostfix(DoublyLinkedList<String> parts) throws InvalidPropertiesFormatException {
-        Stack<String> stack = new Stack<>();
+        Stack<Double> stack = new Stack<>();
 
         for (String part : parts) {
             if (isNumeric(part))
-                stack.push(part);
+                stack.push(Double.parseDouble(part));
             else {
                 double result;
 
                 if (part.equals("!")){
-                    double num = Double.parseDouble(stack.pop());
+                    double num = stack.pop();
+
                     UnaryOperator operator = new UnaryOperator(part.charAt(0), num);
                     isValid(operator);
                     result = OperatorController.getOperatorController().calculate(operator);
                 }
                 else {
-                    double num1 = Double.parseDouble(stack.pop());
-                    double num2 = Double.parseDouble(stack.pop());
+                    double num1 = stack.pop();
+                    double num2 = stack.pop();
                     BinaryOperator operator = new BinaryOperator(part.charAt(0), num2, num1);
                     isValid(operator);
                     result = OperatorController.getOperatorController().calculate(operator);
                 }
 
-                stack.push(String.valueOf(result));
+                stack.push(result);
             }
         }
 
-        return stack.pop();
+        return String.valueOf(stack.pop());
     }
 
     private void isValid(Operator operator) {
